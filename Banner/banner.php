@@ -77,6 +77,7 @@ class Banner {
         $this->g_gametype();
         $this->sv_hostname();
         $this->path_map();
+        $this->sv_maxclients();
     }
 
     private function path_map()
