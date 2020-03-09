@@ -1,13 +1,33 @@
 # ServerStatus
 #### Shows the status of the COD MW3 server using UDP protocol
 
-To get information about the server, you must perform a GET request
+To get information about the server, you need to turn to the Banner class.
 
 ```php
-  $_GET['ip'] //server address
-  $_GET['port'] //master/query port
+  require_once BANNER_PATH.'banner.php';
   
-  $_GET['location'] //Geolocation server
-  $_GET['admin'] //Founder/admin server
+  $banner = new Banner('127.0.0.1', 27015);
+  //or you can specify additional information
+  //new Banner('127.0.0.1', 27015, 'admin', 'server_location');
 ```
 
+I do not like the front end, so I think that you yourself can make the banner design to your taste.
+
+```php
+  echo $banner->field;
+  // Fields
+  //g_gametype - game type
+  //g_hardcore = hardcore status
+  //gamename = game name (IW5 - COD MW3, IW4 - COD MW2)
+  //mapname = map name (already converted: mp_dome = Dome)
+  //scr_game_allowkillcam = killcam status
+  //scr_team_fftype = friendly fire status
+  //shortversion = game version (Tekno MW3 - 1.4; Steam - 1.9)
+  //sv_allowClientConsole = allow RCON console for clinet
+  //sv_hostname = host name (if hostname has symbols ^(1-9), then use function $banner->color_text($banner->sv_hostname))
+  //sv_maxclients = max clients for server
+  //sv_voice = voice chat type
+  //pswrd = server has password
+```
+
+That's all, I think they don’t throw rotten eggs at me :stuck_out_tongue_winking_eye:
