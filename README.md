@@ -32,6 +32,10 @@ I do not like the front end, so I think that you yourself can make the banner de
 
 That's all, I think they don’t throw rotten eggs at me :stuck_out_tongue_winking_eye:
 
+# TODO
+
+![ServerStatus DROPDOWN](https://i.ibb.co/sChN2gh/Server-Offline-Example.png)
+
 ### Однако, WireShark хорошая программа, с помощью неё я смог сделать это..., а, ведь, когда-то я узнавал статус севрера иначе:
 #### 1 - На сервере был скрипт, которые посылал POST запрос php обработчику на сайте, запрос содержал в себе информацию о сервере.
 #### 2 - Обработчик записывал/создавал/обнавлял данные в JSON файле на сервере (где обработчик).
