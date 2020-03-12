@@ -7,6 +7,8 @@ To get information about the server, you need to turn to the Banner class.
   require_once BANNER_PATH.'banner.php';
   
   $banner = new Banner('127.0.0.1', 27015);
+  //127.0.0.1 - Server IP
+  //27015 - MasterPort(QueryPort)
   //or you can specify additional information
   //new Banner('127.0.0.1', 27015, 'admin', 'server_location');
 ```
