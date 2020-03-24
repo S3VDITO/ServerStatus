@@ -1,5 +1,8 @@
-
 <?php
+
+//TEST
+$banner = new Banner('62.210.147.54', 27010);
+echo $banner->player_str_data;
 
 class Banner {
 
@@ -11,6 +14,8 @@ class Banner {
 
     private $send_string = 'LOOP0000';
     private $recive_string;
+
+    public $player_str_data;
 
     public $g_gametype = 'Undefined';
     public $g_hardcore = 'Undefined';
@@ -55,6 +60,7 @@ class Banner {
             $this->recive_string = mb_convert_encoding($this->recive_string, 'utf-8', mb_detect_encoding($this->recive_string));
             $this->recive_string = stristr($this->recive_string, 'g_gametype', false);
             $this->server_info_dictionary(explode(chr(92), stristr($this->recive_string, '\mod\0', true)));
+            $this->player_str_data = stristr($this->recive_string, '\mod\0', false);
         }
 
         socket_close($udp_client);
