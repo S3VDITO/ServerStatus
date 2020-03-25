@@ -1,8 +1,90 @@
 <?php
+$banner = new Banner('127.0.0.1', 27016);
+?>
 
-//TEST
-$banner = new Banner('62.210.147.54', 27010);
-echo $banner->player_str_data;
+    <div>
+        <table>
+            <tr>
+                <?php echo
+                    '<th colspan="2" style="text-align: center">
+                <p>'.$banner->color_text($banner->sv_hostname).'<p>
+				<p>'.$banner->mapname.'<p>
+                <img style="display: block; margin-left: auto; margin-right: auto;" src="maps/'.$banner->mapname.'.png">
+            </th>'?>
+            </tr>
+            <tr>
+                <td>Game type</td>
+                <?php echo '<td>'.$banner->g_gametype.'</td>' ?>
+            </tr>
+            <tr>
+                <td>Hardcore</td>
+                <?php echo '<td>'.$banner->g_hardcore.'</td>' ?>
+            </tr>
+            <tr>
+                <td>Friendly fire</td>
+                <?php echo '<td>'.$banner->scr_team_fftype.'</td>' ?>
+            </tr>
+            <tr>
+                <td>Voice option</td>
+                <?php echo '<td>'.$banner->sv_voice.'</td>' ?>
+            </tr>
+            <tr>
+                <td>Location</td>
+                <?php echo '<td>'.$banner->location.'</td>' ?>
+            </tr>
+            <tr>
+                <td>Admin</td>
+                <?php echo '<td>'.$banner->admin.'</td>' ?>
+            </tr>
+            <tr>
+                <td>Clients</td>
+                <?php echo '<td>'.count($banner->player_array_data).'/'.$banner->sv_maxclients.'</td>' ?>
+            </tr>
+        </table>
+
+        <table>
+            <tr>
+                <th>Player name</th>
+                <th>Score</th>
+                <th>Ping</th>
+            </tr>
+
+            <?php
+            foreach ($banner->player_array_data as $key => $item)
+            {
+                echo '<tr>';
+                echo '<td>'.$key.'</td>';
+                echo '<td>'.$item['score'].'</td>';
+                echo '<td>'.$item['ping'].'</td>';
+                echo '</tr>';
+            }
+            ?>
+        </table>
+    </div>
+
+    <style>
+        div {
+            margin: 0;
+        }
+
+        table {
+            font-family: arial, sans-serif;
+            border-collapse: collapse;
+            width: 100%;
+        }
+
+        td, th {
+            border: 1px solid #dddddd;
+            text-align: left;
+            padding: 8px;
+        }
+
+        tr:nth-child(even) {
+            background-color: #dddddd;
+        }
+    </style>
+
+<?php
 
 class Banner {
 
@@ -17,10 +99,12 @@ class Banner {
 
     public $player_str_data;
 
+    public $player_array_data = array();
+
     public $g_gametype = 'Undefined';
     public $g_hardcore = 'Undefined';
     public $gamename = 'Undefined';
-    public $mapname = 'Undefined';
+    public $mapname = 'Offline';
     public $scr_game_allowkillcam = 'Undefined';
     public $scr_team_fftype = 'Undefined';
     public $shortversion = 'Undefined';
@@ -30,11 +114,9 @@ class Banner {
     public $sv_voice = 'Undefined';
     public $pswrd = 'Undefined';
 
-    private $path_map = 'Banner/maps/Offline.png';
+    private $path_map = 'Offline';
 
     private $server_info_array = array();
-
-    public static $Echo;
 
     function __construct($ip, $port, $admin = 'Undefined', $location = 'Undefined') {
         $this->ip = $ip;
@@ -48,22 +130,67 @@ class Banner {
 
     private function run_udp_connect()
     {
-        $udp_client = stream_socket_client('udp://'.$this->ip.':'.$this->port);
+        try {
+            $udp_client = stream_socket_client('udp://'.$this->ip.':'.$this->port, $errno, $errstr, 5);
 
-        fwrite($udp_client, $this->send_string);
-        $this->recive_string = fread($udp_client, 2048);
+            if (!$udp_client)
+                return;
 
-        if(!$this->recive_string)
-            return;
-        else
+            fwrite($udp_client, $this->send_string);
+            $this->recive_string = fread($udp_client, 2048);
+
+            if(!$this->recive_string)
+                return;
+            else
+            {
+                $this->recive_string = mb_convert_encoding($this->recive_string, 'utf-8', mb_detect_encoding($this->recive_string));
+                $this->recive_string = stristr($this->recive_string, 'g_gametype', false);
+                $this->server_info_dictionary(explode(chr(92), stristr($this->recive_string, '\mod', true)));
+                $this->player_str_data = stristr($this->recive_string, '\mod', false);
+                $this->player_str_data = substr($this->player_str_data, 7, mb_strlen($this->player_str_data));
+                $this->server_players_data(explode(chr(10), $this->player_str_data));
+            }
+        }
+        catch (Exception $e)
+        {}
+
+        // stream_socket_shutdown($udp_client);
+    }
+
+    private function server_players_data($array)
+    {
+        foreach($array as $item)
         {
-            $this->recive_string = mb_convert_encoding($this->recive_string, 'utf-8', mb_detect_encoding($this->recive_string));
-            $this->recive_string = stristr($this->recive_string, 'g_gametype', false);
-            $this->server_info_dictionary(explode(chr(92), stristr($this->recive_string, '\mod\0', true)));
-            $this->player_str_data = stristr($this->recive_string, '\mod\0', false);
+            if($item)
+            {
+                $this->str_to_array_player_info($item);
+            }
+        }
+    }
+
+    private function str_to_array_player_info($str)
+    {
+        $max_space_count = 2;
+
+        $score_and_ping = '';
+        $player_name = '';
+
+        for($curent_space = 0, $i = 0; $i < mb_strlen($str); $i++)
+        {
+            if(chr(32) == $str[$i] && $max_space_count != $curent_space)
+                $curent_space++;
+            if($max_space_count != $curent_space)
+                $score_and_ping = $score_and_ping.$str[$i];
+            else
+                $player_name =  $player_name.($str[$i] == '"' ? '' : $str[$i]);
         }
 
-        socket_close($udp_client);
+        $arr = explode(chr(32), $score_and_ping);
+
+        if(!$player_name)
+            return;
+
+        $this->player_array_data[substr($player_name, 1, mb_strlen($player_name))] = array('score' => $arr[0], 'ping' => $arr[1]);
     }
 
     private function server_info_dictionary($array)
@@ -141,7 +268,7 @@ class Banner {
 
     private function scr_game_allowkillcam()
     {
-       $this->scr_game_allowkillcam =  $this->server_info_array['scr_game_allowkillcam'] == 1 ? 'On' : 'Off';
+        $this->scr_game_allowkillcam =  $this->server_info_array['scr_game_allowkillcam'] == 1 ? 'On' : 'Off';
     }
 
     private function scr_team_fftype()
@@ -215,7 +342,7 @@ class Banner {
             case 'mp_lambeth':
                 $this->mapname = 'Fallen';
                 break;
-             case 'mp_terminal_cls':
+            case 'mp_terminal_cls':
                 $this->mapname = 'Terminal';
                 break;
             case 'mp_overwatch':
@@ -352,3 +479,5 @@ class Banner {
         return $DataOut;
     }
 }
+
+?>
